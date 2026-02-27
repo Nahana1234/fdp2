@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nahana C — Portfolio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --border: #1e1e2e;
+      --accent: #7fffb2;
+      --accent2: #4ef0c8;
+      --text: #e8e8f0;
+      --muted: #6b6b88;
+      --glow: rgba(127,255,178,0.15);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    .cursor {
+      position: fixed;
+      width: 12px; height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%,-50%);
+      transition: transform 0.1s ease, width 0.2s, height 0.2s, background 0.2s;
+      mix-blend-mode: difference;
+    }
+    .cursor.expanded { width: 40px; height: 40px; background: var(--accent2); }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(127,255,178,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(127,255,178,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ——— NAVBAR ——— */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.2rem 3rem;
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,15,0.8);
+      transition: padding 0.3s;
+    }
+    nav.scrolled { padding: 0.8rem 3rem; }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: -0.5px;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--text); }
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.78rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      transition: color 0.2s;
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0;
+      width: 0; height: 1px;
+      background: var(--accent);
+      transition: width 0.3s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-cta {
+      background: transparent;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.5rem 1.4rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      cursor: none;
+      transition: background 0.2s, color 0.2s;
+      text-decoration: none;
+    }
+    .nav-cta:hover { background: var(--accent); color: var(--bg); }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: none; background: none; border: none; }
+    .hamburger span { width: 24px; height: 2px; background: var(--text); transition: all 0.3s; display: block; }
+
+    /* ——— HERO ——— */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 8rem 3rem 4rem;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .hero-bg-circle {
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(127,255,178,0.08) 0%, transparent 70%);
+      right: -100px; top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      animation: pulse 4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { transform: translateY(-50%) scale(1); opacity: 0.6; }
+      50% { transform: translateY(-50%) scale(1.1); opacity: 1; }
+    }
+    .hero-content { max-width: 800px; }
+    .hero-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(127,255,178,0.3);
+      padding: 0.35rem 0.9rem;
+      margin-bottom: 2rem;
+      animation: fadeSlideIn 0.6s ease forwards;
+    }
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -3px;
+      margin-bottom: 1.5rem;
+      animation: fadeSlideIn 0.7s 0.1s ease forwards;
+      opacity: 0;
+    }
+    .hero-title .line { display: block; }
+    .hero-title .green { color: var(--accent); }
+    .hero-sub {
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 500px;
+      margin-bottom: 3rem;
+      animation: fadeSlideIn 0.7s 0.2s ease forwards;
+      opacity: 0;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 3rem;
+      margin-bottom: 3rem;
+      animation: fadeSlideIn 0.7s 0.3s ease forwards;
+      opacity: 0;
+    }
+    .stat-item { text-align: left; }
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-label { font-size: 0.68rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-top: 0.3rem; }
+    .hero-btns {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeSlideIn 0.7s 0.4s ease forwards;
+      opacity: 0;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: var(--bg);
+      padding: 0.85rem 2.2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      display: inline-block;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(127,255,178,0.3); }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      padding: 0.85rem 2.2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s, color 0.2s;
+      display: inline-block;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .scroll-indicator {
+      position: absolute;
+      bottom: 2.5rem; left: 3rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--muted);
+      font-size: 0.65rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      animation: fadeSlideIn 1s 0.8s ease forwards;
+      opacity: 0;
+    }
+    .scroll-line { width: 40px; height: 1px; background: var(--muted); }
+
+    /* ——— SECTIONS ——— */
+    section { position: relative; z-index: 1; }
+    .section-inner { max-width: 1100px; margin: 0 auto; padding: 6rem 3rem; }
+    .section-tag {
+      font-size: 0.65rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -2px;
+      margin-bottom: 3rem;
+      line-height: 1;
+    }
+
+    /* ——— ABOUT ——— */
+    #about { border-top: 1px solid var(--border); }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .about-text p { color: var(--muted); line-height: 1.9; font-size: 0.9rem; margin-bottom: 1.2rem; }
+    .about-text p strong { color: var(--text); }
+    .about-details { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .detail-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .detail-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .detail-label { font-size: 0.62rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.5rem; }
+    .detail-value { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); }
+
+    /* ——— EDUCATION ——— */
+    #education { border-top: 1px solid var(--border); background: var(--surface); }
+    .edu-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 2rem 2.5rem;
+      margin-bottom: 1.5rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 2rem;
+      align-items: start;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .edu-card:hover { border-color: var(--accent); transform: translateX(6px); }
+    .edu-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin-top: 6px;
+      flex-shrink: 0;
+      box-shadow: 0 0 12px rgba(127,255,178,0.5);
+    }
+    .edu-degree { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; }
+    .edu-inst { font-size: 0.8rem; color: var(--muted); margin-bottom: 0.8rem; }
+    .edu-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .tag { font-size: 0.65rem; letter-spacing: 1px; text-transform: uppercase; padding: 0.3rem 0.7rem; border: 1px solid var(--border); color: var(--muted); }
+    .tag.green { border-color: rgba(127,255,178,0.4); color: var(--accent); }
+    .cgpa-num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--accent); line-height: 1; }
+    .cgpa-label { font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; }
+
+    /* ——— SKILLS ——— */
+    #skills { border-top: 1px solid var(--border); }
+    .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
+    .skill-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      transition: border-color 0.3s;
+    }
+    .skill-group:hover { border-color: var(--accent); }
+    .skill-group-title { font-family: 'Syne', sans-serif; font-size: 0.8rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); margin-bottom: 1.5rem; }
+    .skill-item { margin-bottom: 1.2rem; }
+    .skill-name { font-size: 0.78rem; color: var(--text); margin-bottom: 0.4rem; display: flex; justify-content: space-between; }
+    .skill-name span { color: var(--muted); }
+    .skill-bar { height: 2px; background: var(--border); position: relative; }
+    .skill-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      width: 0;
+      transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+      position: relative;
+    }
+    .skill-fill::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(127,255,178,0.8);
+    }
+
+    /* ——— PERFORMANCE ——— */
+    #performance { border-top: 1px solid var(--border); background: var(--surface); }
+    .semester-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 3rem; }
+    .sem-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .sem-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+    .sem-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    .sem-label { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 0.8rem; }
+    .sem-gpa { font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800; color: var(--accent); line-height: 1; margin-bottom: 0.3rem; }
+    .sem-gpa-label { font-size: 0.62rem; color: var(--muted); letter-spacing: 1px; }
+    .courses-header { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text); margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+    .course-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr auto auto;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      font-size: 0.78rem;
+      transition: background 0.2s;
+    }
+    .course-row:hover { background: rgba(127,255,178,0.03); }
+    .course-code { color: var(--muted); font-size: 0.7rem; }
+    .course-name { color: var(--text); }
+    .course-credits { color: var(--muted); text-align: center; }
+    .course-grade { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; text-align: right; }
+    .grade-o { color: #7fffb2; }
+    .grade-a { color: #4ef0c8; }
+    .grade-b { color: #a0a0ff; }
+
+    /* ——— PROJECTS ——— */
+    #projects { border-top: 1px solid var(--border); }
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; }
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .project-card:hover { border-color: var(--accent); transform: translateY(-4px); }
+    .project-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 80px; height: 80px;
+      background: radial-gradient(circle at bottom right, rgba(127,255,178,0.1), transparent 70%);
+    }
+    .project-num { font-family: 'Syne', sans-serif; font-size: 4rem; font-weight: 800; color: var(--border); line-height: 1; margin-bottom: 1rem; }
+    .project-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--text); margin-bottom: 0.8rem; }
+    .project-desc { font-size: 0.8rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.5rem; }
+    .project-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+    /* ——— CONTACT ——— */
+    #contact { border-top: 1px solid var(--border); background: var(--surface); }
+    .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; }
+    .contact-text p { font-size: 0.88rem; color: var(--muted); line-height: 1.9; margin-bottom: 2rem; }
+    .contact-links { display: flex; flex-direction: column; gap: 1rem; }
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-decoration: none;
+      padding: 1rem 1.5rem;
+      border: 1px solid var(--border);
+      transition: border-color 0.3s, color 0.3s;
+    }
+    .contact-link:hover { border-color: var(--accent); color: var(--accent); }
+    .contact-icon { font-size: 1rem; }
+    .contact-form { display: flex; flex-direction: column; gap: 1.2rem; }
+    .form-field input, .form-field textarea {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      padding: 1rem 1.2rem;
+      outline: none;
+      transition: border-color 0.3s;
+      resize: vertical;
+    }
+    .form-field input:focus, .form-field textarea:focus { border-color: var(--accent); }
+    .form-field input::placeholder, .form-field textarea::placeholder { color: var(--muted); }
+    .form-submit {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      padding: 1rem 2rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 1px;
+      cursor: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .form-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(127,255,178,0.3); }
+
+    /* ——— FOOTER ——— */
+    footer { border-top: 1px solid var(--border); position: relative; z-index: 1; }
+    .footer-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2.5rem 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.2rem; color: var(--accent); text-decoration: none; }
+    .footer-links { display: flex; gap: 2rem; list-style: none; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: 0.72rem; letter-spacing: 1px; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--accent); }
+    .footer-copy { font-size: 0.7rem; color: var(--muted); }
+
+    /* ——— RESPONSIVE ——— */
+    @media (max-width: 768px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links {
+        display: none;
+        flex-direction: column;
+        position: fixed;
+        inset: 0;
+        background: var(--bg);
+        justify-content: center;
+        align-items: center;
+        gap: 2.5rem;
+        font-size: 1rem;
+        z-index: 99;
+      }
+      .nav-links.open { display: flex; }
+      .nav-cta { display: none; }
+      .hamburger { display: flex; z-index: 100; }
+      #hero { padding: 7rem 1.5rem 4rem; }
+      .hero-stats { gap: 2rem; }
+      .stat-num { font-size: 1.8rem; }
+      .section-inner { padding: 4rem 1.5rem; }
+      .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .edu-card { grid-template-columns: auto 1fr; }
+      .edu-cgpa { display: none; }
+      .semester-grid { grid-template-columns: repeat(2, 1fr); }
+      .course-row { grid-template-columns: 1fr 2fr auto; }
+      .course-credits { display: none; }
+      .contact-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+      .footer-inner { flex-direction: column; text-align: center; }
+      .footer-links { justify-content: center; }
+    }
+
+    /* Reveal */
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 0.5rem; vertical-align: middle; }
+  </style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+
+<!-- NAVBAR -->
+<nav id="navbar">
+  <a href="#hero" class="nav-logo">NC<span>.</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="#about" onclick="closeMenu()">About</a></li>
+    <li><a href="#education" onclick="closeMenu()">Education</a></li>
+    <li><a href="#skills" onclick="closeMenu()">Skills</a></li>
+    <li><a href="#performance" onclick="closeMenu()">Academic</a></li>
+    <li><a href="#projects" onclick="closeMenu()">Projects</a></li>
+    <li><a href="#contact" onclick="closeMenu()">Contact</a></li>
+  </ul>
+  <a href="#contact" class="nav-cta">Get in touch</a>
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg-circle"></div>
+  <div class="hero-content">
+    <div class="hero-tag"><span class="dot"></span>Available for opportunities</div>
+    <h1 class="hero-title">
+      <span class="line">Nahana</span>
+      <span class="line green">C.</span>
+    </h1>
+    <p class="hero-sub">
+      M.Tech in Networks &amp; Security · CGPA 9.1<br/>
+      Specializing in cybersecurity, advanced networking, and cloud computing.
+      Building secure, scalable systems at the intersection of theory and practice.
+    </p>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">9.1</div>
+        <div class="stat-label">CGPA</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">9.85</div>
+        <div class="stat-label">Best SGPA</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">68</div>
+        <div class="stat-label">Credits</div>
+      </div>
+    </div>
+    <div class="hero-btns">
+      <a href="#projects" class="btn-primary">View Projects</a>
+      <a href="#contact" class="btn-secondary">Contact Me</a>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <div class="scroll-line"></div>
+    <span>Scroll to explore</span>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="section-inner">
+    <p class="section-tag reveal"><span class="dot"></span>01 — Who I am</p>
+    <h2 class="section-title reveal">About Me</h2>
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <p>I am <strong>Nahana C</strong>, a postgraduate engineer specializing in <strong>Networks and Security</strong> from Government Engineering College, Wayanad under APJ Abdul Kalam Technological University.</p>
+        <p>With a CGPA of <strong>9.1/10</strong>, I've built a strong foundation in advanced algorithms, network design, cryptography, cloud computing, and cyber law. My academic journey reflects a deep passion for securing digital infrastructure.</p>
+        <p>I thrive at the intersection of <strong>theoretical computer science</strong> and <strong>real-world security challenges</strong> — from analyzing path &amp; flow problems in networks to designing resilient, secure computing environments.</p>
+      </div>
+      <div class="about-details reveal">
+        <div class="detail-card"><div class="detail-label">Degree</div><div class="detail-value">M.Tech</div></div>
+        <div class="detail-card"><div class="detail-label">Specialisation</div><div class="detail-value">Networks &amp; Security</div></div>
+        <div class="detail-card"><div class="detail-label">Institution</div><div class="detail-value">GEC Wayanad</div></div>
+        <div class="detail-card"><div class="detail-label">Year of Passing</div><div class="detail-value">June 2022</div></div>
+        <div class="detail-card"><div class="detail-label">Register No.</div><div class="detail-value">WYD20CSNS11</div></div>
+        <div class="detail-card"><div class="detail-label">Duration</div><div class="detail-value">2 Years (4 Sems)</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EDUCATION -->
+<section id="education">
+  <div class="section-inner">
+    <p class="section-tag reveal"><span class="dot"></span>02 — Academic background</p>
+    <h2 class="section-title reveal">Education</h2>
+    <div class="edu-card reveal">
+      <div class="edu-dot"></div>
+      <div>
+        <div class="edu-degree">Master of Technology (M.Tech)</div>
+        <div class="edu-inst">Government Engineering College, Wayanad · APJ Abdul Kalam Technological University</div>
+        <div class="edu-tags">
+          <span class="tag green">Networks &amp; Security</span>
+          <span class="tag">2020 – 2022</span>
+          <span class="tag">Full-time</span>
+          <span class="tag">English Medium</span>
+        </div>
+      </div>
+      <div class="edu-cgpa">
+        <div class="cgpa-num">9.1</div>
+        <div class="cgpa-label">CGPA</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SKILLS -->
+<section id="skills">
+  <div class="section-inner">
+    <p class="section-tag reveal"><span class="dot"></span>03 — Core competencies</p>
+    <h2 class="section-title reveal">Skills</h2>
+    <div class="skills-grid">
+      <div class="skill-group reveal">
+        <div class="skill-group-title">Network Security</div>
+        <div class="skill-item">
+          <div class="skill-name">Cybersecurity Principles <span>98%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="98"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Network Design <span>96%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="96"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Topics in Networking <span>96%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="96"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Secure Computing <span>90%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="90"></div></div>
+        </div>
+      </div>
+      <div class="skill-group reveal">
+        <div class="skill-group-title">CS Foundations</div>
+        <div class="skill-item">
+          <div class="skill-name">Advanced Algorithms <span>96%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="96"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Math Foundations <span>96%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="96"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Data Mining &amp; KD <span>96%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="96"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Research Methodology <span>96%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="96"></div></div>
+        </div>
+      </div>
+      <div class="skill-group reveal">
+        <div class="skill-group-title">Emerging Tech</div>
+        <div class="skill-item">
+          <div class="skill-name">Social Network Analysis <span>96%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="96"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Cloud Computing <span>80%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="80"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Cyber Legislation <span>96%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="96"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="skill-name">Systems Modeling <span>84%</span></div>
+          <div class="skill-bar"><div class="skill-fill" data-width="84"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ACADEMIC PERFORMANCE -->
+<section id="performance">
+  <div class="section-inner">
+    <p class="section-tag reveal"><span class="dot"></span>04 — Academic record</p>
+    <h2 class="section-title reveal">Performance</h2>
+    <div class="semester-grid reveal">
+      <div class="sem-card">
+        <div class="sem-label">Semester I</div>
+        <div class="sem-gpa">9.85</div>
+        <div class="sem-gpa-label">SGPA</div>
+      </div>
+      <div class="sem-card">
+        <div class="sem-label">Semester II</div>
+        <div class="sem-gpa">9.37</div>
+        <div class="sem-gpa-label">SGPA</div>
+      </div>
+      <div class="sem-card">
+        <div class="sem-label">Semester III</div>
+        <div class="sem-gpa">8.75</div>
+        <div class="sem-gpa-label">SGPA</div>
+      </div>
+      <div class="sem-card">
+        <div class="sem-label">Semester IV</div>
+        <div class="sem-gpa">8.0</div>
+        <div class="sem-gpa-label">SGPA</div>
+      </div>
+    </div>
+    <div class="reveal">
+      <div class="courses-header">Coursework Highlights</div>
+      <div class="course-row">
+        <div class="course-code">10CS6301</div>
+        <div class="course-name">Mathematical Foundations for Networks</div>
+        <div class="course-credits">3 cr</div>
+        <div class="course-grade grade-o">O</div>
+      </div>
+      <div class="course-row">
+        <div class="course-code">10CS6303</div>
+        <div class="course-name">Advanced Algorithms and Analyses</div>
+        <div class="course-credits">4 cr</div>
+        <div class="course-grade grade-o">O</div>
+      </div>
+      <div class="course-row">
+        <div class="course-code">10CS6305</div>
+        <div class="course-name">Topics in Networking</div>
+        <div class="course-credits">4 cr</div>
+        <div class="course-grade grade-o">O</div>
+      </div>
+      <div class="course-row">
+        <div class="course-code">10CS6307</div>
+        <div class="course-name">Network Design and Performance Evaluation</div>
+        <div class="course-credits">4 cr</div>
+        <div class="course-grade grade-o">O</div>
+      </div>
+      <div class="course-row">
+        <div class="course-code">10CS6306</div>
+        <div class="course-name">Topics in Security</div>
+        <div class="course-credits">4 cr</div>
+        <div class="course-grade grade-o">O</div>
+      </div>
+      <div class="course-row">
+        <div class="course-code">10CS6316</div>
+        <div class="course-name">Cyber Legislation and Security Policies</div>
+        <div class="course-credits">3 cr</div>
+        <div class="course-grade grade-o">O</div>
+      </div>
+      <div class="course-row">
+        <div class="course-code">10CS7327</div>
+        <div class="course-name">Social Network Analysis</div>
+        <div class="course-credits">3 cr</div>
+        <div class="course-grade grade-o">O</div>
+      </div>
+      <div class="course-row">
+        <div class="course-code">10CS7304</div>
+        <div class="course-name">Project – Phase II (Final Thesis)</div>
+        <div class="course-credits">18 cr</div>
+        <div class="course-grade grade-b">B+</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section id="projects">
+  <div class="section-inner">
+    <p class="section-tag reveal"><span class="dot"></span>05 — Work</p>
+    <h2 class="section-title reveal">Projects</h2>
+    <div class="projects-grid">
+      <div class="project-card reveal">
+        <div class="project-num">01</div>
+        <div class="project-title">M.Tech Thesis — Final Project</div>
+        <p class="project-desc">Capstone research project (18 credits) completed during the final semester, applying advanced concepts in network security and systems design to a real-world problem domain.</p>
+        <div class="project-tags">
+          <span class="tag green">Research</span>
+          <span class="tag">Security</span>
+          <span class="tag">Networking</span>
+        </div>
+      </div>
+      <div class="project-card reveal">
+        <div class="project-num">02</div>
+        <div class="project-title">Secure Computing Laboratory</div>
+        <p class="project-desc">Hands-on practical implementation of secure computing principles, encryption protocols, and network vulnerability analysis using industry-standard tools and methodologies.</p>
+        <div class="project-tags">
+          <span class="tag green">Lab Work</span>
+          <span class="tag">Cryptography</span>
+          <span class="tag">A+ Grade</span>
+        </div>
+      </div>
+      <div class="project-card reveal">
+        <div class="project-num">03</div>
+        <div class="project-title">Mini Project — Network Security</div>
+        <p class="project-desc">Designed and developed a focused mini-project exploring advanced topics in network security, achieving an A+ grade through robust implementation and thorough documentation.</p>
+        <div class="project-tags">
+          <span class="tag green">Mini Project</span>
+          <span class="tag">A+ Grade</span>
+          <span class="tag">Networks</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact">
+  <div class="section-inner">
+    <p class="section-tag reveal"><span class="dot"></span>06 — Get in touch</p>
+    <h2 class="section-title reveal">Contact</h2>
+    <div class="contact-grid">
+      <div class="contact-text reveal">
+        <p>I'm currently open to new opportunities in cybersecurity, network engineering, and research roles. Whether you have a project, a position, or simply want to connect — I'd love to hear from you.</p>
+        <div class="contact-links">
+          <a href="mailto:nahanac@example.com" class="contact-link">
+            <span class="contact-icon">✉</span> nahanac@example.com
+          </a>
+          <a href="https://linkedin.com" class="contact-link" target="_blank">
+            <span class="contact-icon">in</span> linkedin.com/in/nahanac
+          </a>
+          <a href="https://github.com" class="contact-link" target="_blank">
+            <span class="contact-icon">⌥</span> github.com/nahanac
+          </a>
+        </div>
+      </div>
+      <div class="contact-form reveal">
+        <div class="form-field"><input type="text" placeholder="Your name" /></div>
+        <div class="form-field"><input type="email" placeholder="Your email" /></div>
+        <div class="form-field"><textarea rows="5" placeholder="Your message"></textarea></div>
+        <button class="form-submit" onclick="handleSubmit(this)">Send Message →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <a href="#hero" class="footer-logo">NC.</a>
+    <ul class="footer-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#education">Education</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <p class="footer-copy">© 2025 Nahana C. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = e.clientX + 'px';
+    cursor.style.top = e.clientY + 'px';
+  });
+  document.querySelectorAll('a, button').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('expanded'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('expanded'));
+  });
+
+  // Navbar scroll shrink
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // Hamburger menu
+  function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+  function closeMenu() {
+    document.getElementById('navLinks').classList.remove('open');
+  }
+
+  // Scroll reveal + skill bar animation
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        entry.target.querySelectorAll('.skill-fill').forEach(bar => {
+          bar.style.width = bar.dataset.width + '%';
+        });
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // Form submit feedback
+  function handleSubmit(btn) {
+    btn.textContent = 'Message Sent ✓';
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--accent)';
+    btn.style.border = '1px solid var(--accent)';
+    btn.disabled = true;
+  }
+
+  // Smooth scroll with offset
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      window.scrollTo({ top: target.offsetTop - 80, behavior: 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>
